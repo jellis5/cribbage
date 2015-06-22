@@ -295,7 +295,9 @@ def count_flush(suits, crib=False):
 
 def count_nobs(cards, flip_card):
 	for card in cards:
-		return 1 if card.rank == 'Jack' and card.suit == flip_card.suit else 0
+		if card.rank == 'Jack' and card.suit == flip_card.suit:
+			return 1
+	return 0
 
 def count_pairs(cards):
 	points = 0
@@ -309,6 +311,7 @@ def is_consec(cards):
 	for i in range(len(cards) - 1):
 		if cards[i] != cards[i+1] - 1:
 			return False
+			
 	return True
 
 def count_runs(cards):
@@ -334,7 +337,6 @@ def count_runs(cards):
 
 def count_fifteens(card_values):
 	points = 0
-
 	for card_combo in combinations(card_values, 2):
 		if card_combo[0] + card_combo[1] == 15:
 			points += 2
@@ -350,7 +352,7 @@ def count_fifteens(card_values):
 			
 	return points
 	
-def printScore(hand, flip_card):
+def print_score(hand, flip_card):
 	values = [CARD_MAP[card.rank] for card in hand.cards]
 	values.append(CARD_MAP[flip_card.rank])
 	rank_nums = [RUNS_MAP[card.rank] for card in hand.cards]
@@ -373,6 +375,31 @@ def printScore(hand, flip_card):
 	
 	return total
 	
+def ask_player_points():
+	while True:
+		try:
+			points = int(input("Enter how many points you have: "))
+			if points < 0 or points > 29:
+				raise KeyError
+			break
+		except ValueError:
+			continue
+		except KeyError:
+			print("Hand must be between 0 and 29 points.")
+			continue
+	return points
+	
+def check_player_points(points, total):
+	if total >= points:
+		if points == total:
+			print("Yeah, you got {} point(s).".format(points))
+		else:
+			print("You missed {} point(s).".format(total - points))
+		return points
+	else:
+		print("No, you only got {} point(s). 2 point deduction from actual point amount.".format(total))
+		return total - 2
+	
 def second_round(whose_crib, flip_card):
 	if whose_crib:
 		input("It's your crib. Computer scores first. Press enter to continue.")
@@ -380,7 +407,7 @@ def second_round(whose_crib, flip_card):
 		print_flip_card(flip_card)
 		print(comp.hand)
 		print("\nComputer has...")
-		comp.score += printScore(comp.hand, flip_card)
+		comp.score += print_score(comp.hand, flip_card)
 		show_scores()
 		check_for_winner()
 		#your turn to score
@@ -388,53 +415,17 @@ def second_round(whose_crib, flip_card):
 		print()
 		print_flip_card(flip_card)
 		print(player.hand)
-		while True:
-			try:
-				points = int(input("Enter how many points you have: "))
-				if points < 0 or points > 29:
-					raise KeyError
-				break
-			except ValueError:
-				continue
-			except KeyError:
-				print("Hand must be between 0 and 29 points.")
-				continue
-		total = printScore(player.hand, flip_card)
-		if points == total:
-			print("Yeah, you got {} point(s).".format(points))
-			player.score += points
-		elif total > points:
-			print("You missed {} point(s).".format(total - points))
-			player.score += points
-		else:
-			print("No, you only got {} point(s). 2 point deduction from actual point amount.".format(total))
-			player.score += total - 2
+		points = ask_player_points()
+		total = print_score(player.hand, flip_card)
+		player.score += check_player_points(points, total)
 		show_scores()
 		check_for_winner()
 		print("\nNow for the crib.\n")
 		print_flip_card(flip_card)
 		print(crib)
-		while True:
-			try:
-				points = int(input("Enter how many points you have: "))
-				if points < 0 or points > 29:
-					raise KeyError
-				break
-			except ValueError:
-				continue
-			except KeyError:
-				print("Hand must be between 0 and 29 points.")
-				continue
-		total = printScore(crib, flip_card)
-		if total == points:
-			print("Yeah, you got {} point(s).".format(points))
-			player.score += points
-		elif total > points:
-			print("You missed {} point(s).".format(total - points))
-			player.score += points
-		else:
-			print("No, you only got {} point(s). 2 point deduction from actual point amount.".format(total))
-			player.score += total - 2
+		points = ask_player_points()
+		total = print_score(crib, flip_card)
+		player.score += check_player_points(points, total)
 		show_scores()
 		check_for_winner()
 	else:
@@ -442,27 +433,9 @@ def second_round(whose_crib, flip_card):
 		print()
 		print_flip_card(flip_card)
 		print(player.hand)
-		while True:
-			try:
-				points = int(input("Enter how many points you have: "))
-				if points < 0 or points > 29:
-					raise KeyError
-				break
-			except ValueError:
-				continue
-			except KeyError:
-				print("Hand must be between 0 and 29 points.")
-				continue
-		total = printScore(player.hand, flip_card)
-		if total == points:
-			print("Yeah, you got {} point(s).".format(points))
-			player.score += points
-		elif total > points:
-			print("You missed {} point(s).".format(total - points))
-			player.score += points
-		else:
-			print("No, you only got {} point(s). 2 point deduction from actual point amount.".format(total))
-			player.score += total - 2
+		points = ask_player_points()
+		total = print_score(player.hand, flip_card)
+		player.score += check_player_points(points, total)
 		show_scores()
 		check_for_winner()
 		#computer's turn to score
@@ -471,7 +444,7 @@ def second_round(whose_crib, flip_card):
 		print_flip_card(flip_card)
 		print(comp.hand)
 		print("\nComputer has...")
-		comp.score += printScore(comp.hand, flip_card)
+		comp.score += print_score(comp.hand, flip_card)
 		show_scores()
 		check_for_winner()
 		input("\nNow for the crib. Press enter to continue.")
@@ -479,7 +452,7 @@ def second_round(whose_crib, flip_card):
 		print_flip_card(flip_card)
 		print(crib)
 		print("\nComputer has...")
-		comp.score += printScore(crib, flip_card)
+		comp.score += print_score(crib, flip_card)
 		show_scores()
 		check_for_winner()
 
