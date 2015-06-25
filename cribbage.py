@@ -106,7 +106,7 @@ def fr_pair_scorer(cards_played, cp_length):
 		return (2, "pair for 2")
 	
 def fr_run_scorer(cards_played, cp_length):
-	if cp_length < 2:
+	if cp_length < 3:
 		return
 	run = None
 	#for 3-card possible runs to cp_length-card possible runs...
