@@ -89,45 +89,49 @@ def flip_card(whose_crib):
 #
 # FIRST ROUND FUNCTIONS
 #
-	
-def fr_pair_scorer(cards_played):
+
+def is_consec(cards):
+	for i in range(len(cards) - 1):
+		if cards[i] != cards[i+1] - 1:
+			return False
+			
+	return True
+
+def fr_pair_scorer(cards_played, cp_length):
 	if cards_played[-1].rank == cards_played[-2].rank:
-		if len(cards_played) >= 3 and cards_played[-1].rank == cards_played[-3].rank:
-			if len(cards_played) >= 4 and cards_played[-1].rank == cards_played[-4].rank:
-				return(12, "four-of-a-kind for 12")
+		if cp_length >= 3 and cards_played[-1].rank == cards_played[-3].rank:
+			if cp_length >= 4 and cards_played[-1].rank == cards_played[-4].rank:
+				return (12, "four-of-a-kind for 12")
 			return (6, "three-of-a-kind for 6")
 		return (2, "pair for 2")
-	return
 	
 def fr_run_scorer(cards_played, cp_length):
-	if cp_length == 2:
+	if cp_length < 2:
 		return
-	a, b = -1, -2
-	ordered_ranks = [RUNS_MAP[card.rank] for card in cards_played]
-	ordered_ranks = ordered_ranks[-1:(cp_length+1)*-1:-1]
-	ordered_ranks = sorted(ordered_ranks)
-	spaces = 1
-	while spaces < cp_length:
-		if ordered_ranks[a] - ordered_ranks[b] != 1:
-			return fr_run_scorer(cards_played, cp_length-1)
-		a -= 1
-		b -= 1
-		spaces += 1
-	if spaces == cp_length:
-		return (cp_length, "run for {}".format(cp_length))
+	run = None
+	#for 3-card possible runs to cp_length-card possible runs...
+	for runLength in range(3, cp_length + 1):
+		#see if runLength-card run by checking if last runLength nums are consecutive
+		print([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])
+		if is_consec(sorted([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])):
+			run = runLength
+		else:
+			break
+	if run:
+		return (run, "run for {}".format(run))
 	
-def first_round_scorer(cards_played, count):
-	if len(cards_played) == 1:
+def first_round_scorer(cards_played, cp_length, count):
+	if cp_length == 1:
 		return
 	text_and_score = []
 	if count == 15:
 		text_and_score.append((2, "15 for 2"))
-	pairs = fr_pair_scorer(cards_played)
+	pairs = fr_pair_scorer(cards_played, cp_length)
 	if pairs:
 		text_and_score.append(pairs)
 	#if card paired, a run in the same play is impossible
 	else:
-		runs = fr_run_scorer(cards_played, len(cards_played))
+		runs = fr_run_scorer(cards_played, cp_length)
 		if runs:
 			text_and_score.append(runs)
 	
@@ -169,16 +173,16 @@ def first_round(whose_crib, flip_card):
 					comp_go_flag = True
 			
 			if turn_alt % 2 == 0:
-				if player_empty_hand is True:
+				if player_empty_hand:
 					turn_alt += 1
 					continue
 				print("Your turn.")
 				print("Opponent's cards left: {}".format(len(comp.hand.cards)))
 				card_nums = player.hand.get_card_nums()
 				player.hand.print_card_nums()
-				if player_go_flag is True:
+				if player_go_flag:
 					input("You can't go. Press enter to continue.")
-					if comp_go_flag or comp_empty_hand is True:
+					if comp_go_flag or comp_empty_hand:
 						input("Computer can't go either. Press enter to continue.")
 						break
 					turn_alt += 1
@@ -206,12 +210,12 @@ def first_round(whose_crib, flip_card):
 						print("You can't play a card that exceeds 31.")
 						continue
 			else:
-				if comp_empty_hand is True:
+				if comp_empty_hand:
 					turn_alt += 1
 					continue
-				if comp_go_flag is True:
+				if comp_go_flag:
 					input("Computer can't go. Press enter to continue.")
-					if player_go_flag or player_empty_hand is True:
+					if player_go_flag or player_empty_hand:
 						input("You can't go either. Press enter to continue.")
 						break
 					turn_alt += 1
@@ -232,7 +236,7 @@ def first_round(whose_crib, flip_card):
 			print("***************")
 			print()
 			print_flip_card(flip_card)
-			score_text = first_round_scorer(cards_played, count)
+			score_text = first_round_scorer(cards_played, len(cards_played), count)
 			if score_text:
 				for score,text in score_text:
 					input("{} {}. Press enter to continue.".format("You say" if cards_played[-1] is player_played_cards[-1] else "Computer says", text))
@@ -306,13 +310,6 @@ def count_pairs(cards):
 			points += 2
 	
 	return points
-
-def is_consec(cards):
-	for i in range(len(cards) - 1):
-		if cards[i] != cards[i+1] - 1:
-			return False
-			
-	return True
 
 def count_runs(cards):
 	points = 0
