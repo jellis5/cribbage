@@ -6,7 +6,7 @@ from random import shuffle, randint
 from time import sleep
 from itertools import combinations
 			
-from Classes import CARD_MAP, RUNS_MAP, Card, Deck, Hand, Player, Computer, GoError
+from Classes import CARD_MAP, RUNS_MAP, Card, Deck, Hand, Player, Computer
 
 
 def first_crib_draw():
@@ -31,13 +31,13 @@ def first_crib_draw():
 		print("Tie!")
 		first_crib_draw()
 
-def form_crib(whose_crib):
+def form_crib(is_your_crib):
 	crib.cards = []
 	crib.cards.extend(comp.crib_cards())
 	card_nums = player.hand.get_card_nums()
 	player.hand.print_card_nums()
 	print()
-	print("{} crib.".format("Your" if whose_crib else "Computer's"))
+	print("{} crib.".format("Your" if is_your_crib else "Computer's"))
 	while True:
 		try:
 			crib_card1 = input("Select the first card to go into the crib: ")
@@ -66,8 +66,8 @@ def print_flip_card(card):
 	print("* {:17s} *".format(card).rjust(80))
 	print("*********************".rjust(80))
 
-def flip_card(whose_crib):
-	if whose_crib:
+def flip_card(is_your_crib):
+	if is_your_crib:
 		print('\nYou ask for a cut. Opponent obliges.')
 		input("\nPress enter to flip the card.")
 	else:
@@ -76,7 +76,7 @@ def flip_card(whose_crib):
 	flip = deck.draw_cards(1)[0]
 	print_flip_card(flip)
 	if flip.rank == 'Jack':
-		if whose_crib:
+		if is_your_crib:
 			print("You got nibs!\n")
 			player.score += 2
 		else:
@@ -112,7 +112,6 @@ def fr_run_scorer(cards_played, cp_length):
 	#for 3-card possible runs to cp_length-card possible runs...
 	for runLength in range(3, cp_length + 1):
 		#see if runLength-card run by checking if last runLength nums are consecutive
-		print([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])
 		if is_consec(sorted([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])):
 			run = runLength
 		else:
@@ -137,11 +136,8 @@ def first_round_scorer(cards_played, cp_length, count):
 	
 	return text_and_score
 
-def first_round(whose_crib, flip_card):
-	if whose_crib:
-		turn_alt = 3
-	else:
-		turn_alt = 2
+def first_round(is_your_crib, flip_card):
+	your_turn = not is_your_crib
 	
 	comp_played_cards = []
 	player_played_cards = []
@@ -172,9 +168,9 @@ def first_round(whose_crib, flip_card):
 				else:
 					comp_go_flag = True
 			
-			if turn_alt % 2 == 0:
+			if your_turn:
 				if player_empty_hand:
-					turn_alt += 1
+					your_turn = not your_turn
 					continue
 				print("Your turn.")
 				print("Opponent's cards left: {}".format(len(comp.hand.cards)))
@@ -185,7 +181,7 @@ def first_round(whose_crib, flip_card):
 					if comp_go_flag or comp_empty_hand:
 						input("Computer can't go either. Press enter to continue.")
 						break
-					turn_alt += 1
+					your_turn = not your_turn
 					continue
 				while True:
 					try:
@@ -195,30 +191,27 @@ def first_round(whose_crib, flip_card):
 							continue
 						card = int(card)
 						if CARD_MAP[card_nums[card].rank] + count > 31:
-							raise GoError
+							raise ValueError("You can't play a card that exceeds 31.")
 						count += CARD_MAP[card_nums[card].rank]
 						player_played_cards.append(card_nums[card])
 						cards_played.append(card_nums[card])
 						player.hand.remove(card_nums[card])
 						if len(player.hand.cards) == 0:
 							player_empty_hand = True
-						turn_alt += 1
+						your_turn = not your_turn
 						break
 					except (ValueError, KeyError):
 						continue
-					except GoError:
-						print("You can't play a card that exceeds 31.")
-						continue
 			else:
 				if comp_empty_hand:
-					turn_alt += 1
+					your_turn = not your_turn
 					continue
 				if comp_go_flag:
 					input("Computer can't go. Press enter to continue.")
 					if player_go_flag or player_empty_hand:
 						input("You can't go either. Press enter to continue.")
 						break
-					turn_alt += 1
+					your_turn = not your_turn
 					continue
 				print("Computer's turn. He's thinking...\n")
 				sleep(1)
@@ -228,7 +221,7 @@ def first_round(whose_crib, flip_card):
 				cards_played.append(comp_card)
 				if len(comp.hand.cards) == 0:
 					comp_empty_hand = True
-				turn_alt += 1
+				your_turn = not your_turn
 			print("***************")
 			print("\nCount: {}\n".format(count))
 			for card in cards_played:
@@ -397,8 +390,8 @@ def check_player_points(points, total):
 		print("No, you only got {} point(s). 2 point deduction from actual point amount.".format(total))
 		return total - 2
 	
-def second_round(whose_crib, flip_card):
-	if whose_crib:
+def second_round(is_your_crib, flip_card):
+	if is_your_crib:
 		input("It's your crib. Computer scores first. Press enter to continue.")
 		print()
 		print_flip_card(flip_card)
@@ -485,8 +478,7 @@ def check_for_winner():
 		
 def main():
 	print("Welcome to Cribbage!\n")
-	#whose_crib returns True for player's crib, false for opponent's
-	whose_crib = first_crib_draw()
+	is_your_crib = first_crib_draw()
 	global player
 	global comp
 	global crib
@@ -500,17 +492,17 @@ def main():
 		player.hand.add_cards(deck.draw_cards(6))
 		comp.hand.cards = []
 		comp.hand.add_cards(deck.draw_cards(6))
-		form_crib(whose_crib)
-		flip = flip_card(whose_crib)
-		first_round(whose_crib, flip)
-		second_round(whose_crib, flip)
+		form_crib(is_your_crib)
+		flip = flip_card(is_your_crib)
+		first_round(is_your_crib, flip)
+		second_round(is_your_crib, flip)
 		print("\n*************")
 		print("* NEXT HAND *")
 		print("*************\n")
 		player.hand.cards = []
 		comp.hand.cards = []
 		crib.cards = []
-		whose_crib = False if whose_crib else True
+		is_your_crib = not is_your_crib
 
 	return 0
 

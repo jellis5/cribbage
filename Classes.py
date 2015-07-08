@@ -137,9 +137,3 @@ class Computer(Player):
 				return card
 		else:
 			return "go"
-		
-class GoError(Exception):
-	"""Class for catching player trying to go over 31.
-	
-	All handling should be done in context and outside of this class, hence pass. :)"""
-	pass
