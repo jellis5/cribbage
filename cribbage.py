@@ -112,7 +112,6 @@ def fr_run_scorer(cards_played, cp_length):
 	#for 3-card possible runs to cp_length-card possible runs...
 	for runLength in range(3, cp_length + 1):
 		#see if runLength-card run by checking if last runLength nums are consecutive
-		print([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])
 		if is_consec(sorted([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])):
 			run = runLength
 	if run:
