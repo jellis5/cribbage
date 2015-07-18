@@ -112,10 +112,9 @@ def fr_run_scorer(cards_played, cp_length):
 	#for 3-card possible runs to cp_length-card possible runs...
 	for runLength in range(3, cp_length + 1):
 		#see if runLength-card run by checking if last runLength nums are consecutive
+		print([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])
 		if is_consec(sorted([RUNS_MAP[card.rank] for card in cards_played[-1:(runLength*-1)-1:-1]])):
 			run = runLength
-		else:
-			break
 	if run:
 		return (run, "run for {}".format(run))
 	
@@ -140,8 +139,8 @@ def set_go_flag(count, hand):
 	for card in hand:
 		if CARD_MAP[card.rank] + count <= 31:
 			return False
-		else:
-			return True
+	else:
+		return True
 
 def first_round(is_your_crib, flip_card):
 	your_turn = not is_your_crib
@@ -239,42 +238,24 @@ def first_round(is_your_crib, flip_card):
 					check_for_winner()
 				show_scores()
 		# current count cannot be added to, so give last or 31 point(s)
+		is_player_last = cards_played[-1] is player_played_cards[-1]
 		if count == 31:
-			if comp_empty_hand and player_empty_hand:
-				if cards_played[-1] is player_played_cards[-1]:
-					input("You say 31 for 2. Press enter to continue.")
-					player.score += 2
-				else:
-					input("Computer says 31 for 2. Press enter to continue.")
-					comp.score += 2
-				check_for_winner()
-				break
+			if is_player_last:
+				input("You say 31 for 2. Press enter to continue.")
+				player.score += 2
 			else:
-				if cards_played[-1] is player_played_cards[-1]:
-					input("You say 31 for 2. Press enter to continue.")
-					player.score += 2
-				else:
-					input("Computer says 31 for 2. Press enter to continue.")
-					comp.score += 2
-				check_for_winner()
+				input("Computer says 31 for 2. Press enter to continue.")
+				comp.score += 2
 		else:
-			if comp_empty_hand and player_empty_hand:
-				if cards_played[-1] is player_played_cards[-1]:
-					input("You got one for last. Press enter to continue.")
-					player.score += 1
-				else:
-					input("Computer got one for last. Press enter to continue.")
-					comp.score += 1
-				check_for_winner()
-				break
+			if is_player_last:
+				input("You got one for last. Press enter to continue.")
+				player.score += 1
 			else:
-				if cards_played[-1] is player_played_cards[-1]:
-					input("You got one for last. Press enter to continue.")
-					player.score += 1
-				else:
-					input("Computer got one for last. Press enter to continue.")
-					comp.score += 1
-				check_for_winner()
+				input("Computer got one for last. Press enter to continue.")
+				comp.score += 1
+		check_for_winner()
+		if comp_empty_hand and player_empty_hand:
+			break
 		show_scores()
 	player.hand.cards.extend(player_played_cards)
 	comp.hand.cards.extend(comp_played_cards)
