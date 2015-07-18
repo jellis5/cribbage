@@ -6,7 +6,7 @@ from random import shuffle, randint
 from time import sleep
 from itertools import combinations
 			
-from Classes import CARD_MAP, RUNS_MAP, Card, Deck, Hand, Player, Computer
+from Classes import *
 
 
 def first_crib_draw():
@@ -136,6 +136,13 @@ def first_round_scorer(cards_played, cp_length, count):
 	
 	return text_and_score
 
+def set_go_flag(count, hand):
+	for card in hand:
+		if CARD_MAP[card.rank] + count <= 31:
+			return False
+		else:
+			return True
+
 def first_round(is_your_crib, flip_card):
 	your_turn = not is_your_crib
 	
@@ -154,19 +161,11 @@ def first_round(is_your_crib, flip_card):
 			if len(player.hand.cards) == 0:
 				player_empty_hand = True
 			else:
-				for card in player.hand:
-					if CARD_MAP[card.rank] + count <= 31:
-						break
-				else:
-					player_go_flag = True
+				player_go_flag = set_go_flag(count, player.hand)
 			if len(comp.hand.cards) == 0:
 				comp_empty_hand = True
 			else:
-				for card in comp.hand:
-					if CARD_MAP[card.rank] + count <= 31:
-						break
-				else:
-					comp_go_flag = True
+				comp_go_flag = set_go_flag(count, comp.hand)
 			
 			if your_turn:
 				if player_empty_hand:
@@ -239,6 +238,7 @@ def first_round(is_your_crib, flip_card):
 						comp.score += score
 					check_for_winner()
 				show_scores()
+		# current count cannot be added to, so give last or 31 point(s)
 		if count == 31:
 			if comp_empty_hand and player_empty_hand:
 				if cards_played[-1] is player_played_cards[-1]:
